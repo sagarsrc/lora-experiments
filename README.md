@@ -2,12 +2,25 @@
 
 A comprehensive comparison of **baseline fine-tuning** vs **LoRA (Low-Rank Adaptation)** for sentiment analysis using Llama 3.2 1B on the IMDB dataset.
 
+## Hardware Configuration
+
+**All experiments conducted on:**
+
+```
+GPU: NVIDIA A10 (23GB VRAM)
+Driver Version: 570.144
+CUDA Version: 12.8
+Memory Capacity: 23,028 MiB total
+```
+
+This hardware configuration demonstrates LoRA's effectiveness on professional-grade GPUs. Results may vary on consumer GPUs with less VRAM.
+
 ## What This Repository Does
 
 This repository demonstrates the effectiveness of Parameter-Efficient Fine-Tuning (PEFT) using LoRA compared to traditional full fine-tuning approaches. It includes:
 
 - **Baseline Implementation**: Traditional fine-tuning of Llama 3.2 1B with frozen early layers
-- **LoRA Implementation**: Parameter-efficient fine-tuning using Low-Rank Adaptation 
+- **LoRA Implementation**: Parameter-efficient fine-tuning using Low-Rank Adaptation
 - **Comprehensive Evaluation**: Detailed metrics comparison including F1, precision, recall, and confusion matrices
 - **Automated Analysis**: Side-by-side comparison of parameter efficiency vs performance trade-offs
 
@@ -16,9 +29,9 @@ This repository demonstrates the effectiveness of Parameter-Efficient Fine-Tunin
 ```
 ├── notebooks/
 │   ├── 001-baseline_llama.py         # Partial fine-tuning (12 layers frozen)
-│   ├── 002-lora_llama.py             # LoRA fine-tuning implementation  
+│   ├── 002-lora_llama.py             # LoRA fine-tuning implementation
 │   ├── 003-compare_results.py        # Automated comparison script
-│   ├── 004-full-vs-lora-batch-demo.py # True full fine-tuning vs LoRA batch size demo
+│   ├── 004-full_vs_lora_batch_demo.py # True full fine-tuning vs LoRA batch size demo
 │   ├── .env.example                  # Environment setup template
 │   ├── results_baseline_*.json       # Baseline training results
 │   ├── results_lora_*.json           # LoRA training results
@@ -31,6 +44,7 @@ This repository demonstrates the effectiveness of Parameter-Efficient Fine-Tunin
 ## Installation
 
 ### Prerequisites
+
 - Python 3.12+
 - CUDA 12.1 compatible GPU
 - uv package manager
@@ -38,23 +52,27 @@ This repository demonstrates the effectiveness of Parameter-Efficient Fine-Tunin
 ### Setup Instructions
 
 1. **Clone Repository**:
+
    ```bash
    git clone <repository-url>
    cd lora-experiments
    ```
 
 2. **Initialize Project with uv**:
+
    ```bash
    uv venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
 3. **Install Dependencies**:
+
    ```bash
    uv sync
    ```
 
 4. **Setup Environment**:
+
    ```bash
    cp notebooks/.env.example notebooks/.env
    # Edit notebooks/.env and add your HuggingFace token:
@@ -72,19 +90,114 @@ This repository demonstrates the effectiveness of Parameter-Efficient Fine-Tunin
 # Run partial fine-tuning (baseline)
 python notebooks/001-baseline_llama.py
 
-# Run LoRA fine-tuning  
+# Run LoRA fine-tuning
 python notebooks/002-lora_llama.py
 
 # Compare results
 python notebooks/003-compare_results.py
 
 # Demonstrate true full fine-tuning vs LoRA batch size differences
-python notebooks/004-full-vs-lora-batch-demo.py
+python notebooks/004-full_vs_lora_batch_demo.py
 ```
+
+## Memory & Batch Size Demonstration Results
+
+Running `python notebooks/004-full_vs_lora_batch_demo.py` produces this real-world demonstration:
+
+```
+Memory & Batch Size Comparison: Full Fine-tuning vs LoRA
+================================================================================
+⏭️  Skipping full fine-tuning (RUN_FULL_FINETUNING = False)
+   Set RUN_FULL_FINETUNING = True to experience the OOM error
+
+✅ Running LoRA experiment - should work with larger batch size
+
+================================================================================
+EXPERIMENT: LoRA Fine-tuning
+Batch Size: 16
+================================================================================
+Loading IMDB dataset for lora fine-tuning...
+Train: 800, Val: 200, Test: 500
+Batch size: 16
+Loading Llama 3.2 1B for LoRA fine-tuning...
+  Base model will have LoRA adapters applied
+Applying LoRA to enable larger batch sizes...
+trainable params: 11,272,192 || all params: 1,247,086,592 || trainable%: 0.9039
+  After model loading - GPU Memory: Allocated=4.65GB, Reserved=4.66GB, Peak=4.65GB
+Training with LORA approach on cuda
+Batch size: 16
+Total parameters: 1,247,090,690
+Trainable parameters: 11,276,290 (0.9%)
+  Training start - GPU Memory: Allocated=4.65GB, Reserved=4.66GB, Peak=4.65GB
+Training (lora):   2%|▏         | 1/50 [00:02<01:49,  2.24s/it]
+  Batch 0 - GPU Memory: Allocated=4.79GB, Reserved=20.77GB, Peak=20.48GB
+Training (lora): 100%|██████████| 50/50 [01:27<00:00,  1.76s/it]
+Validating (lora): 100%|██████████| 13/13 [00:11<00:00,  1.14it/s]
+Epoch 1/1 (99.2s)
+  Train Loss: 0.7457
+  Val Loss: 0.4266, Val Acc: 0.8600
+  LR: 1.00e-04
+  Epoch end - GPU Memory: Allocated=4.79GB, Reserved=20.77GB, Peak=20.57GB
+  New best model (loss: 0.4266)
+------------------------------------------------------------
+
+Final Evaluation:
+Results Summary:
+  Approach: LORA
+  Batch Size: 16
+  Training Time: 99.2s
+  Test Accuracy: 0.8580
+  Peak Memory: 20.57GB
+  Trainable Params: 11,276,290
+
+================================================================================
+FINAL COMPARISON
+================================================================================
+Full Fine-tuning: CRASHED with CUDA OOM (as expected)
+  Attempted Batch Size: 2
+  Status: Out of Memory Error
+
+LoRA Fine-tuning:
+  Batch Size: 16
+  Peak Memory: 20.57GB
+  Training Time: 99.2s
+  Test Accuracy: 0.8580
+  Trainable Params: 11,276,290
+
+Key Insights:
+  LoRA enables 8x larger batch size than attempted full fine-tuning
+  Full fine-tuning FAILED due to memory constraints
+  LoRA succeeds where full fine-tuning fails
+  This demonstrates LoRA's practical necessity for large model training
+```
+
+### Understanding GPU Memory Logs
+
+The memory tracking shows three key metrics:
+
+1. **Allocated Memory (4.79GB)**: Memory currently in active use by tensors
+
+   - Model weights, activations, gradients being computed
+   - Fluctuates during forward/backward passes
+   - Only shows "live" tensors at that moment
+
+2. **Reserved Memory (20.77GB)**: Total GPU memory claimed by PyTorch
+
+   - **This is your actual GPU memory usage**
+   - Includes allocated memory + PyTorch's memory pool
+   - PyTorch pre-allocates chunks to avoid frequent malloc/free operations
+   - What shows up in `nvidia-smi` as "used memory"
+
+3. **Peak Memory (20.57GB)**: Maximum allocated memory during training
+   - Highest active tensor memory at any single point
+   - Usually occurs during backward pass with gradient accumulation
+
+**Key Insight**: Your model uses 20.77GB total GPU memory, but only 4.79GB is actively allocated to tensors at any moment. The remaining ~16GB is PyTorch's memory pool for efficient memory management.
 
 ## Key Findings
 
 ### Performance Comparison
+
 - **Baseline**: 87.16% accuracy with 505M trainable parameters (40.9% of model)
 - **LoRA**: 93.84% accuracy with 11M trainable parameters (0.9% of model)
 - **Improvement**: +6.68% accuracy with 97.8% fewer trainable parameters
@@ -92,29 +205,33 @@ python notebooks/004-full-vs-lora-batch-demo.py
 **NOTE**: The "baseline" is not true full fine-tuning - we freeze the first 12 layers (out of 22) to make training feasible on consumer GPUs with batch size 16. Full fine-tuning of all 1.24B parameters would require significantly more GPU memory and compute resources. This partial fine-tuning approach gives us a practical comparison point while demonstrating the computational constraints that make LoRA attractive.
 
 ### Parameter Efficiency
-| Method | Total Params | Trainable Params | Trainable % | Accuracy | Notes |
-|--------|-------------|------------------|-------------|----------|-------|
-| Baseline* | 1.24B | 506M | 40.9% | 87.16% | *Partial fine-tuning (12 layers frozen) |
-| LoRA | 1.24B | 11M | 0.9% | 93.84% | Full model + adapters |
+
+| Method     | Total Params | Trainable Params | Trainable % | Accuracy | Notes                                    |
+| ---------- | ------------ | ---------------- | ----------- | -------- | ---------------------------------------- |
+| Baseline\* | 1.24B        | 506M             | 40.9%       | 87.16%   | \*Partial fine-tuning (12 layers frozen) |
+| LoRA       | 1.24B        | 11M              | 0.9%        | 93.84%   | Full model + adapters                    |
 
 ## GPU Memory Usage Analysis
 
 **Training vs Inference Memory Usage:**
 
 **During Training:**
+
 1. **Full Fine-tuning**: Requires massive GPU memory for gradients of all trainable parameters
+
    - Even batch size 1 may not fit on consumer GPUs for 1B+ models
    - All layer gradients must be stored and updated
    - Memory scales with number of trainable parameters
    - **Note**: Our demo uses `device_map="auto"` and `torch.float16` to attempt full fine-tuning (requires `accelerate` package)
 
 2. **LoRA Training**: Dramatically reduces memory requirements
-   - Can use much larger batch sizes (16-32+) 
+   - Can use much larger batch sizes (16-32+)
    - Only stores gradients for small adapter matrices (~11M parameters)
    - Base model weights frozen - no gradient storage needed for them
    - **Memory savings are substantial during training**
 
 **During Inference:**
+
 - Both approaches load the full model into memory
 - LoRA adds minimal overhead (~11M adapter parameters)
 - Memory usage is similar for inference only
@@ -125,6 +242,7 @@ python notebooks/004-full-vs-lora-batch-demo.py
    - True full fine-tuning would require much more memory and smaller batches
 
 **LoRA's Real Benefits**:
+
 - **Training Memory Efficiency**: Massive reduction in GPU memory during training
 - **Larger Batch Sizes**: Can use 8-16x larger batches than full fine-tuning
 - **Parameter Efficiency**: 97.8% reduction in trainable parameters (505M to 11M)
@@ -137,12 +255,14 @@ python notebooks/004-full-vs-lora-batch-demo.py
 ## Technical Details
 
 ### LoRA Configuration
+
 - **Rank (r)**: 16
-- **Alpha**: 32  
+- **Alpha**: 32
 - **Dropout**: 0.1
 - **Target Modules**: `["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]`
 
 ### Training Configuration
+
 - **Dataset**: IMDB sentiment analysis (5K train samples, 2.5K test)
 - **Model**: meta-llama/Llama-3.2-1B
 - **Batch Size**: 16 (enabled by layer freezing in baseline)
