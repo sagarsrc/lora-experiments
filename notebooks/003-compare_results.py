@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# %%
 """
 Compare results between Baseline and LoRA training
 """
@@ -214,3 +214,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# %%

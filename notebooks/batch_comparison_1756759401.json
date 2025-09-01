@@ -1,0 +1,19 @@
+{
+  "full_finetuning": null,
+  "lora_finetuning": {
+    "approach": "lora",
+    "batch_size": 16,
+    "total_training_time": 99.23805356025696,
+    "test_loss": 0.4916414376348257,
+    "test_accuracy": 0.858,
+    "total_params": 1247090690,
+    "trainable_params": 11276290,
+    "peak_memory_gb": 20.571515560150146
+  },
+  "comparison_metrics": {
+    "batch_size_ratio": 8.0,
+    "memory_difference_gb": null,
+    "parameter_reduction_percent": null,
+    "full_finetuning_failed": true
+  }
+}

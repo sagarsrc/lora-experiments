@@ -188,8 +188,23 @@ class LlamaClassifier(nn.Module):
         self._freeze_layers()
 
     def _freeze_layers(self):
-        # Freeze first 12 layers (out of ~22), keep last layers trainable
-        layers_to_freeze = 12
+        """
+        Freeze early layers for memory-efficient training.
+        
+        NOTE: This is NOT true full fine-tuning. We freeze the first 12 layers 
+        (out of ~22 total) to make training feasible on consumer GPUs with 
+        batch size 16. Full fine-tuning of all 1.24B parameters would require 
+        significantly more GPU memory and compute resources.
+        
+        This partial fine-tuning approach provides a practical comparison point
+        while demonstrating the computational constraints that make LoRA attractive.
+        """
+        layers_to_freeze = 12  # Freeze roughly half the transformer layers
+        total_layers = len(self.llama.layers)
+        
+        print(f"  Freezing {layers_to_freeze}/{total_layers} layers for memory efficiency")
+        print(f"  This enables batch_size={self.config.batch_size} training on consumer GPUs")
+        
         for i, layer in enumerate(self.llama.layers):
             if i < layers_to_freeze:
                 for param in layer.parameters():
@@ -359,7 +374,11 @@ if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
 
-    print("Llama 3.2 1B Sentiment Analysis - Baseline")
+    print("Llama 3.2 1B Sentiment Analysis - Baseline (Partial Fine-tuning)")
+    print("=" * 60)
+    print("NOTE: This is NOT full fine-tuning. First 12 layers are frozen")
+    print("      to enable training on consumer GPUs with reasonable memory usage.")
+    print("      True full fine-tuning would require significantly more resources.")
     print("=" * 60)
 
     # Data
