@@ -405,41 +405,6 @@ Trainable Params: 11,276,290
    - Only 4.79GB actively allocated to tensors
    - Remaining ~16GB is PyTorch's memory pool for efficiency
 
-## Installation & Setup
-
-### Prerequisites
-- Python 3.12+
-- CUDA 12.1 compatible GPU
-- uv package manager
-
-### Quick Setup
-```bash
-git clone https://github.com/sagarsrc/lora-experiments.git
-cd lora-experiments
-uv venv && source .venv/bin/activate
-uv sync
-cp notebooks/.env.example notebooks/.env
-# Edit .env with your HuggingFace token
-```
-
-## Running the Experiments
-
-Follow the experimental sequence:
-
-```bash
-# Experiment 1: Baseline fine-tuning
-python notebooks/001-baseline_llama.py
-
-# Experiment 2: LoRA fine-tuning
-python notebooks/002-lora_llama.py
-
-# Experiment 3: Compare results
-python notebooks/003-compare_results.py
-
-# Experiment 4: Memory reality check (will crash intentionally!)
-python notebooks/004-full_vs_lora_batch_demo.py
-```
-
 ## Key Technical Configurations
 
 ### LoRA Parameters
